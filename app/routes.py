@@ -1,15 +1,28 @@
 from flask import Blueprint, render_template, request
 import requests
 import concurrent.futures
+import time
 
 bp = Blueprint('main', __name__)
+
+def fetch_with_retries(url, params, max_retries=5, backoff_factor=0.3):
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(url, params=params)
+            response.raise_for_status()
+            return response
+        except requests.exceptions.RequestException as e:
+            if attempt < max_retries - 1:
+                time.sleep(backoff_factor * (2 ** attempt))
+            else:
+                raise e
 
 @bp.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
         username = request.form.get('username')
         filter_by_species_type = 'filter_by_species_type' in request.form
-        species_type = request.form.get('species_type') if filter_by_species_type else 'all species'
+        species_type = request.form.get('species_type') if filter_by_species_type else None
         number_of_results = int(request.form.get('number_of_results', 5))
 
         taxon_frequency = {}
@@ -21,24 +34,31 @@ def index():
             "page": 1,
         }
 
-        if filter_by_species_type and species_type != 'all species':
+        if filter_by_species_type and species_type:
             params["iconic_taxa"] = species_type
 
         while True:
-            response = requests.get(species_counts_url, params=params)
-            if response.status_code == 200:
+            try:
+                response = fetch_with_retries(species_counts_url, params)
                 data = response.json()
                 for result in data["results"]:
                     taxon_id = result["taxon"]["id"]
                     observations_count = result["taxon"]["observations_count"]
-                    taxon_frequency[taxon_id] = observations_count
+                    taxon_type = result["taxon"].get("iconic_taxon_name", "unknown")
+                    taxon_frequency[taxon_id] = {
+                        "count": observations_count,
+                        "type": taxon_type
+                    }
                 if data["total_results"] <= params["page"] * params["per_page"]:
                     break
                 params["page"] += 1
-            else:
-                return render_template('index.html', error=f"Error fetching species counts: {response.status_code}")
+            except requests.exceptions.RequestException as e:
+                return render_template('index.html', error=f"Error fetching species counts: {e}")
 
-        sorted_taxa = sorted(taxon_frequency.items(), key=lambda item: item[1])[:number_of_results]
+        if len(taxon_frequency) < number_of_results:
+            return render_template('index.html', error="Not enough observations for the limit provided.")
+
+        sorted_taxa = sorted(taxon_frequency.items(), key=lambda item: item[1]["count"])[:number_of_results]
 
         results = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -50,19 +70,20 @@ def index():
                 taxon_id = future_to_taxon[future]
                 try:
                     taxon_name = future.result()
-                    observations_count = taxon_frequency[taxon_id]
-                    results.append((taxon_name, taxon_id, observations_count))
+                    observations_count = taxon_frequency[taxon_id]["count"]
+                    taxon_type = taxon_frequency[taxon_id]["type"]
+                    results.append((taxon_name, taxon_id, observations_count, taxon_type))
                 except Exception as exc:
                     return render_template('index.html', error=f"Error fetching taxon name for Taxon ID {taxon_id}: {exc}")
 
         results.sort(key=lambda x: x[2])
-        return render_template('index.html', results=results, number_of_results=number_of_results, species_type=species_type)
+        return render_template('index.html', results=results, number_of_results=number_of_results)
 
     return render_template('index.html')
 
 def fetch_taxon_info(taxon_id):
     taxon_url = f"https://api.inaturalist.org/v1/taxa/{taxon_id}"
-    response = requests.get(taxon_url)
+    response = fetch_with_retries(taxon_url, {})
     if response.status_code == 200:
         taxon_data = response.json()
         if "results" in taxon_data and len(taxon_data["results"]) > 0:
