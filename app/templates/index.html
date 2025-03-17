@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rarest Critter</title>
+    <script>
+        function toggleSpeciesTypeDropdown() {
+            var checkbox = document.getElementById('filter_by_species_type');
+            var dropdown = document.getElementById('species_type_dropdown');
+            dropdown.style.display = checkbox.checked ? 'block' : 'none';
+        }
+    </script>
+</head>
+<body>
+    <h1>Rarest Critter</h1>
+    <form action="/" method="post">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required><br>
+        <label for="filter_by_species_type">Filter by Species Type:</label>
+        <input type="checkbox" id="filter_by_species_type" name="filter_by_species_type" onclick="toggleSpeciesTypeDropdown()"><br>
+        <div id="species_type_dropdown" style="display: none;">
+            <label for="species_type">Species Type:</label>
+            <select id="species_type" name="species_type">
+                <option value="Plantae">Plantae</option>
+                <option value="Animalia">Animalia</option>
+                <option value="Mollusca">Mollusca</option>
+                <option value="Reptilia">Reptilia</option>
+                <option value="Aves">Aves</option>
+                <option value="Amphibia">Amphibia</option>
+                <option value="Actinopterygii">Actinopterygii</option>
+                <option value="Mammalia">Mammalia</option>
+                <option value="Insecta">Insecta</option>
+                <option value="Arachnida">Arachnida</option>
+                <option value="Fungi">Fungi</option>
+                <option value="Protozoa">Protozoa</option>
+                <option value="Chromista">Chromista</option>
+                <option value="unknown">unknown</option>
+            </select><br>
+        </div>
+        <label for="number_of_results">Number of Results (max 20):</label>
+        <input type="number" id="number_of_results" name="number_of_results" min="1" max="20" value="5"><br>
+        <button type="submit">Search</button>
+    </form>
+    {% if results %}
+        <h2>Top {{ number_of_results }} least observed {{ species_type }}</h2>
+        <ul>
+            {% for taxon_name, taxon_id, observations_count in results %}
+                <li>{{ taxon_name }} (Taxon ID: {{ taxon_id }}): {{ observations_count }} observations</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+</body>
+</html>
