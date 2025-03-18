@@ -69,10 +69,11 @@ def index():
             for future in concurrent.futures.as_completed(future_to_taxon):
                 taxon_id = future_to_taxon[future]
                 try:
-                    taxon_name = future.result()
+                    taxon_name, image_url = future.result()
                     observations_count = taxon_frequency[taxon_id]["count"]
                     taxon_type = taxon_frequency[taxon_id]["type"]
-                    results.append((taxon_name, taxon_id, observations_count, taxon_type))
+                    observation_url = f"https://www.inaturalist.org/observations?user_id={username}&taxon_id={taxon_id}"
+                    results.append((taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url))
                 except Exception as exc:
                     return render_template('index.html', error=f"Error fetching taxon name for Taxon ID {taxon_id}: {exc}")
 
@@ -89,5 +90,11 @@ def fetch_taxon_info(taxon_id):
         if "results" in taxon_data and len(taxon_data["results"]) > 0:
             common_name = taxon_data["results"][0].get("preferred_common_name")
             scientific_name = taxon_data["results"][0].get("name", "Unknown")
-            return common_name if common_name else scientific_name
-    return None
+            image_url = taxon_data["results"][0].get("default_photo", {}).get("square_url")
+            return (common_name if common_name else scientific_name, image_url)
+    return (None, None)
+
+# Custom filter to format numbers with commas
+@bp.app_template_filter('format_number')
+def format_number(value):
+    return "{:,}".format(value)

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rarest Critters</title>
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiI+PHRleHQgeT0iMTQiIGZvbnQtc2l6ZT0iMTQiPuKZqTwvdGV4dD48L3N2Zz4=">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -81,6 +82,31 @@
             color: red;
             font-weight: bold;
         }
+        .back-button {
+            background-color: #e74c3c;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px 0;
+        }
+        .back-button:hover {
+            background-color: #c0392b;
+        }
+        footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #888;
+        }
+        .observation-image {
+            margin-right: 10px;
+            border-radius: 4px;
+        }
     </style>
     <script>
         function toggleSpeciesTypeDropdown() {
@@ -92,13 +118,14 @@
 </head>
 <body>
     <h1>🐛 Rarest Critters 🐛</h1>
+    {% if not results %}
     <form action="/" method="post">
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required><br>
+        <label for="username">iNaturalist Username:</label>
+        <input type="text" id="username" name="username" required><br><br>
         <div class="checkbox-container">
             <label for="filter_by_species_type">Filter by Species Type:</label>
             <input type="checkbox" id="filter_by_species_type" name="filter_by_species_type" onclick="toggleSpeciesTypeDropdown()">
-        </div>
+        </div><br>
         <div id="species_type_dropdown" style="display: none;">
             <label for="species_type">Species Type:</label>
             <select id="species_type" name="species_type">
@@ -116,41 +143,38 @@
                 <option value="Protozoa">🦠 Protozoa</option>
                 <option value="Chromista">🌊 Chromista</option>
                 <option value="unknown">❓ unknown</option>
-            </select><br>
+            </select><br><br>
         </div>
-        <label for="number_of_results">Number of Results (max 20):</label>
-        <input type="number" id="number_of_results" name="number_of_results" min="1" max="20" value="5"><br>
+        <label for="number_of_results">Number of Results (max 50):</label>
+        <input type="number" id="number_of_results" name="number_of_results" min="1" max="50" value="5"><br><br>
         <button type="submit">🔍 Search</button>
     </form>
+    {% endif %}
     {% if results %}
-        <h2>Top {{ number_of_results }} least observed critters</h2>
+        <h2>{{ number_of_results }} least observed {{  species_type  }} critters</h2>
         <ul>
-            {% for taxon_name, taxon_id, observations_count, taxon_type in results %}
+            {% for taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url in results %}
                 <li>
-                    <span class="emoji">
-                        {% if taxon_type == 'Plantae' %} 🌿
-                        {% elif taxon_type == 'Animalia' %} 🦀
-                        {% elif taxon_type == 'Mollusca' %} 🐚
-                        {% elif taxon_type == 'Reptilia' %} 🦎
-                        {% elif taxon_type == 'Aves' %} 🐦
-                        {% elif taxon_type == 'Amphibia' %} 🐸
-                        {% elif taxon_type == 'Actinopterygii' %} 🐟
-                        {% elif taxon_type == 'Mammalia' %} 🐻
-                        {% elif taxon_type == 'Insecta' %} 🐞
-                        {% elif taxon_type == 'Arachnida' %} 🕷️
-                        {% elif taxon_type == 'Fungi' %} 🍄
-                        {% elif taxon_type == 'Protozoa' %} 🦠
-                        {% elif taxon_type == 'Chromista' %} 🌊
-                        {% else %} ❓
-                        {% endif %}
-                    </span>
-                    {{ taxon_name }} (Taxon ID: {{ taxon_id }}): {{ observations_count }} observations
+                    {% if image_url %}
+                        <img src="{{ image_url }}" alt="{{ taxon_name }}" class="observation-image" width="50" height="50">
+                    {% endif %}
+                    <a href="{{ observation_url }}" target="_blank"><strong>{{ taxon_name }}</strong></a> 
+                    &nbsp(Taxon ID:&nbsp <a href="https://www.inaturalist.org/taxa/{{ taxon_id }}" target="_blank">{{ taxon_id }}</a>): 
+                    {{ observations_count | int | format_number }} observations
                 </li>
             {% endfor %}
         </ul>
+        <form action="/" method="get">
+            <button type="submit" class="back-button">Back</button>
+        </form>
     {% endif %}
     {% if error %}
         <p class="error">{{ error }}</p>
     {% endif %}
+    <footer>
+        made with critter love 💗
+        <br></br>
+        <br></br>
+    </footer>
 </body>
 </html>
