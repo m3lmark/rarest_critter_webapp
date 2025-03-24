@@ -3,6 +3,8 @@ import requests
 import concurrent.futures
 import time
 import logging
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 bp = Blueprint('main', __name__)
 
@@ -13,10 +15,30 @@ logger = logging.getLogger(__name__)
 DEFAULT_PHOTO_URL = "https://png.pngtree.com/png-vector/20221125/ourmid/pngtree-no-image-available-icon-flatvector-illustration-pic-design-profile-vector-png-image_40966566.jpg"
 DEFAULT_TAXON_NAME = "Unknown Taxon"
 
+def requests_retry_session(
+    retries=5,
+    backoff_factor=0.3,
+    status_forcelist=(429, 500, 502, 503, 504),
+    session=None,
+):
+    session = session or requests.Session()
+    retry = Retry(
+        total=retries,
+        read=retries,
+        connect=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    return session
+
 def fetch_with_retries(url, params=None, max_retries=5, backoff_factor=0.3):
+    session = requests_retry_session(retries=max_retries, backoff_factor=backoff_factor)
     for attempt in range(max_retries):
         try:
-            response = requests.get(url, params=params)
+            response = session.get(url, params=params)
             if response.status_code == 429:
                 time.sleep(backoff_factor * (2 ** attempt))
                 continue
@@ -33,9 +55,10 @@ def fetch_with_retries(url, params=None, max_retries=5, backoff_factor=0.3):
 
 def fetch_taxon_info(taxon_id, max_retries=5, backoff_factor=0.3):
     taxon_url = f"https://api.inaturalist.org/v1/taxa/{taxon_id}"
+    session = requests_retry_session(retries=max_retries, backoff_factor=backoff_factor)
     for attempt in range(max_retries):
         try:
-            response = requests.get(taxon_url)
+            response = session.get(taxon_url)
             if response.status_code == 429:
                 time.sleep(backoff_factor * (2 ** attempt))
                 continue
