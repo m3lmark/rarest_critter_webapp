@@ -25,6 +25,29 @@ def fetch_with_retries(url, params, max_retries=5, backoff_factor=0.3):
                 logger.error(f"Failed to fetch data from {url} after {max_retries} attempts")
                 raise e
 
+def fetch_taxon_info(taxon_id, max_retries=5, backoff_factor=0.3):
+    taxon_url = f"https://api.inaturalist.org/v1/taxa/{taxon_id}"
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(taxon_url)
+            if response.status_code == 429:
+                time.sleep(backoff_factor * (2 ** attempt))
+                continue
+            response.raise_for_status()
+            taxon_data = response.json()
+            if "results" in taxon_data and len(taxon_data["results"]) > 0:
+                common_name = taxon_data["results"][0].get("preferred_common_name")
+                scientific_name = taxon_data["results"][0].get("name", "Unknown")
+                image_url = taxon_data["results"][0].get("default_photo", {}).get("square_url")
+                return (common_name if common_name else scientific_name, image_url)
+            return (None, None)
+        except requests.exceptions.RequestException as e:
+            if attempt < max_retries - 1:
+                time.sleep(backoff_factor * (2 ** attempt))
+            else:
+                logger.error(f"Failed to fetch taxon info for Taxon ID {taxon_id} after {max_retries} attempts")
+                raise e
+
 @bp.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -95,18 +118,6 @@ def index():
         return render_template('index.html', results=results, number_of_results=number_of_results, species_type=species_type)
 
     return render_template('index.html')
-
-def fetch_taxon_info(taxon_id):
-    taxon_url = f"https://api.inaturalist.org/v1/taxa/{taxon_id}"
-    response = fetch_with_retries(taxon_url, {})
-    if response.status_code == 200:
-        taxon_data = response.json()
-        if "results" in taxon_data and len(taxon_data["results"]) > 0:
-            common_name = taxon_data["results"][0].get("preferred_common_name")
-            scientific_name = taxon_data["results"][0].get("name", "Unknown")
-            image_url = taxon_data["results"][0].get("default_photo", {}).get("square_url")
-            return (common_name if common_name else scientific_name, image_url)
-    return (None, None)
 
 # Custom filter to format numbers with commas
 @bp.app_template_filter('format_number')
