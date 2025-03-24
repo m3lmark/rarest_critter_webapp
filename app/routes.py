@@ -16,6 +16,9 @@ def fetch_with_retries(url, params=None, max_retries=5, backoff_factor=0.3):
     for attempt in range(max_retries):
         try:
             response = requests.get(url, params=params)
+            if response.status_code == 429:
+                time.sleep(backoff_factor * (2 ** attempt))
+                continue
             if response.status_code == 422:
                 return response  # Return the response to handle 422 status code
             response.raise_for_status()
@@ -24,7 +27,7 @@ def fetch_with_retries(url, params=None, max_retries=5, backoff_factor=0.3):
             if attempt < max_retries - 1:
                 time.sleep(backoff_factor * (2 ** attempt))
             else:
-                logger.error(f"Failed to fetch data from {url} after {max_retries} attempts")
+                logger.error(f"Failed to fetch data from {url} after {max_retries} attempts: {e}")
                 raise e
 
 def fetch_taxon_info(taxon_id, max_retries=5, backoff_factor=0.3):
@@ -48,8 +51,8 @@ def fetch_taxon_info(taxon_id, max_retries=5, backoff_factor=0.3):
             if attempt < max_retries - 1:
                 time.sleep(backoff_factor * (2 ** attempt))
             else:
-                logger.error(f"Failed to fetch taxon info for Taxon ID {taxon_id} after {max_retries} attempts")
-                raise e
+                logger.error(f"Failed to fetch taxon info for Taxon ID {taxon_id} after {max_retries} attempts: {e}")
+                return (None, DEFAULT_PHOTO_URL)
     return (None, DEFAULT_PHOTO_URL)
 
 @bp.route('/', methods=['GET', 'POST'])
