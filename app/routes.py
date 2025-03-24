@@ -7,7 +7,7 @@ import logging
 bp = Blueprint('main', __name__)
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 DEFAULT_PHOTO_URL = "https://png.pngtree.com/png-vector/20221125/ourmid/pngtree-no-image-available-icon-flatvector-illustration-pic-design-profile-vector-png-image_40966566.jpg"
@@ -37,7 +37,7 @@ def fetch_taxon_info(taxon_id, max_retries=5, backoff_factor=0.3):
                 continue
             response.raise_for_status()
             taxon_data = response.json()
-            logger.debug(f"Taxon data for Taxon ID {taxon_id}: {taxon_data}")
+            logger.info(f"Checking condition: taxon_data={bool(taxon_data)}, 'results' in taxon_data={'results' in taxon_data}, len(taxon_data['results'])={len(taxon_data['results']) if 'results' in taxon_data else 'N/A'}")
             if taxon_data and "results" in taxon_data and len(taxon_data["results"]) > 0:
                 taxon_result = taxon_data["results"][0]
                 common_name = taxon_result.get("preferred_common_name")
