@@ -118,17 +118,13 @@ def index():
                 taxon_id = future_to_taxon[future]
                 try:
                     taxon_name, image_url = future.result()
-                    observations_count = taxon_frequency[taxon_id]["count"]
-                    taxon_type = taxon_frequency[taxon_id]["type"]
-                    observation_url = f"https://www.inaturalist.org/observations?user_id={username}&taxon_id={taxon_id}"
-                    results.append((taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url))
                 except Exception as exc:
                     logger.error(f"Error fetching taxon name for Taxon ID {taxon_id}: {exc}")
                     taxon_name, image_url = DEFAULT_TAXON_NAME, DEFAULT_PHOTO_URL
-                    observations_count = taxon_frequency[taxon_id]["count"]
-                    taxon_type = taxon_frequency[taxon_id]["type"]
-                    observation_url = f"https://www.inaturalist.org/observations?user_id={username}&taxon_id={taxon_id}"
-                    results.append((taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url))
+                observations_count = taxon_frequency[taxon_id]["count"]
+                taxon_type = taxon_frequency[taxon_id]["type"]
+                observation_url = f"https://www.inaturalist.org/observations?user_id={username}&taxon_id={taxon_id}"
+                results.append((taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url))
 
         results.sort(key=lambda x: x[2])
         return render_template('index.html', results=results, number_of_results=number_of_results, species_type=species_type)
