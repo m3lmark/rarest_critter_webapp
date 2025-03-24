@@ -112,7 +112,7 @@ def index():
                     taxon_name, image_url = future.result()
                     if taxon_name is None:
                         logger.error(f"Failed to fetch taxon name for Taxon ID {taxon_id}")
-                        taxon_name = f"No taxon name available, taxon_id: {taxon_id}"
+                        continue
                     observations_count = taxon_frequency[taxon_id]["count"]
                     taxon_type = taxon_frequency[taxon_id]["type"]
                     observation_url = f"https://www.inaturalist.org/observations?user_id={username}&taxon_id={taxon_id}"
