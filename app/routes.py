@@ -2,8 +2,13 @@ from flask import Blueprint, render_template, request
 import requests
 import concurrent.futures
 import time
+import logging
 
 bp = Blueprint('main', __name__)
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def fetch_with_retries(url, params, max_retries=5, backoff_factor=0.3):
     for attempt in range(max_retries):
@@ -17,6 +22,7 @@ def fetch_with_retries(url, params, max_retries=5, backoff_factor=0.3):
             if attempt < max_retries - 1:
                 time.sleep(backoff_factor * (2 ** attempt))
             else:
+                logger.error(f"Failed to fetch data from {url} after {max_retries} attempts")
                 raise e
 
 @bp.route('/', methods=['GET', 'POST'])
@@ -42,6 +48,7 @@ def index():
 
         while True:
             try:
+                logger.info(f"Fetching species counts for page {params['page']}")
                 response = fetch_with_retries(species_counts_url, params)
                 if response.status_code == 422:
                     return render_template('index.html', error="Username does not exist. Please enter a valid iNaturalist username.")
@@ -58,6 +65,7 @@ def index():
                     break
                 params["page"] += 1
             except requests.exceptions.RequestException as e:
+                logger.error(f"Error fetching species counts: {e}")
                 return render_template('index.html', error=f"Error fetching species counts: {e}")
 
         if len(taxon_frequency) < number_of_results:
@@ -80,6 +88,7 @@ def index():
                     observation_url = f"https://www.inaturalist.org/observations?user_id={username}&taxon_id={taxon_id}"
                     results.append((taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url))
                 except Exception as exc:
+                    logger.error(f"Error fetching taxon name for Taxon ID {taxon_id}: {exc}")
                     return render_template('index.html', error=f"Error fetching taxon name for Taxon ID {taxon_id}: {exc}")
 
         results.sort(key=lambda x: x[2])
