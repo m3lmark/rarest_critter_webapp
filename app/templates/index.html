@@ -15,48 +15,51 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            font-size: 130%; /* Increase font size by 30% */
         }
         h1 {
             color: #2c3e50;
             margin-top: 20px;
+            text-align: center;
         }
         form {
             background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            margin-top: 20px;
-            width: 300px;
+            padding: 26px; /* Increase padding by 30% */
+            border-radius: 10px; /* Increase border radius by 30% */
+            box-shadow: 0 0 13px rgba(0, 0, 0, 0.1); /* Increase shadow by 30% */
+            margin-top: 26px; /* Increase margin by 30% */
+            width: 90%; /* Use percentage for responsive width */
+            max-width: 400px; /* Set a max width */
         }
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 10px; /* Increase margin by 30% */
             font-weight: bold;
         }
         .checkbox-container {
             display: flex;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 13px; /* Increase margin by 30% */
         }
         .checkbox-container label {
             margin-bottom: 0;
-            margin-right: 8px;
+            margin-right: 10px; /* Increase margin by 30% */
         }
         input[type="text"],
         input[type="number"],
         select {
-            width: calc(100% - 16px);
-            padding: 8px;
-            margin-bottom: 10px;
+            width: calc(100% - 21px); /* Increase width by 30% */
+            padding: 10px; /* Increase padding by 30% */
+            margin-bottom: 13px; /* Increase margin by 30% */
             border: 1px solid #ccc;
-            border-radius: 4px;
+            border-radius: 5px; /* Increase border radius by 30% */
         }
         button {
             background-color: #3498db;
             color: #fff;
-            padding: 10px 15px;
+            padding: 13px 20px; /* Increase padding by 30% */
             border: none;
-            border-radius: 4px;
+            border-radius: 5px; /* Increase border radius by 30% */
             cursor: pointer;
             width: 100%;
         }
@@ -66,46 +69,59 @@
         ul {
             list-style-type: none;
             padding: 0;
+            width: 90%; /* Use percentage for responsive width */
+            max-width: 400px; /* Set a max width */
         }
         li {
             background-color: #ecf0f1;
-            margin: 5px 0;
-            padding: 10px;
-            border-radius: 4px;
+            margin: 6.5px 0; /* Increase margin by 30% */
+            padding: 13px; /* Increase padding by 30% */
+            border-radius: 5px; /* Increase border radius by 30% */
             display: flex;
             align-items: center;
         }
         .emoji {
-            margin-right: 10px;
+            margin-right: 13px; /* Increase margin by 30% */
         }
         .error {
             color: red;
             font-weight: bold;
+            text-align: center;
         }
         .back-button {
             background-color: #e74c3c;
             color: #fff;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px; /* Increase border radius by 30% */
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 26px; /* Increase margin by 30% */
             width: 100%;
             text-align: center;
             font-size: 16px;
             font-weight: bold;
-            padding: 10px 0;
+            padding: 13px 0; /* Increase padding by 30% */
         }
         .back-button:hover {
             background-color: #c0392b;
         }
         footer {
-            margin-top: 20px;
+            margin-top: 26px; /* Increase margin by 30% */
             font-size: 14px;
             color: #888;
+            text-align: center;
         }
         .observation-image {
-            margin-right: 10px;
-            border-radius: 4px;
+            margin-right: 13px; /* Increase margin by 30% */
+            border-radius: 5px; /* Increase border radius by 30% */
+            max-width: 100px; /* Set a max width */
+            height: 100px; /* Set a fixed height */
+        }
+        .taxon-info {
+            margin-top: 5px; /* Add some space between lines */
+        }
+        .taxon-details {
+            display: flex;
+            flex-direction: column;
         }
     </style>
     <script>
@@ -151,16 +167,22 @@
     </form>
     {% endif %}
     {% if results %}
-        <h2>{{ number_of_results }} least observed {{  species_type  }} critters</h2>
+        <h2>{{ number_of_results }} least observed {% if species_type %}{{ species_type }}{% else %}critters{% endif %}</h2>
         <ul>
             {% for taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url in results %}
                 <li>
                     {% if image_url %}
-                        <img src="{{ image_url }}" alt="{{ taxon_name }}" class="observation-image" width="50" height="50">
+                        <img src="{{ image_url }}" alt="{{ taxon_name }}" class="observation-image">
                     {% endif %}
-                    <a href="{{ observation_url }}" target="_blank"><strong>{{ taxon_name }}</strong></a> 
-                    &nbsp(Taxon ID:&nbsp <a href="https://www.inaturalist.org/taxa/{{ taxon_id }}" target="_blank">{{ taxon_id }}</a>): 
-                    {{ observations_count | int | format_number }} observations
+                    <div class="taxon-details">
+                        <a href="{{ observation_url }}" target="_blank"><strong>{{ taxon_name }}</strong></a>
+                        <div class="taxon-info">
+                            Taxon ID: <a href="https://www.inaturalist.org/taxa/{{ taxon_id }}" target="_blank">{{ taxon_id }}</a>
+                        </div>
+                        <div class="taxon-info">
+                            Observations: {{ observations_count | int | format_number }}
+                        </div>
+                    </div>
                 </li>
             {% endfor %}
         </ul>
@@ -173,8 +195,6 @@
     {% endif %}
     <footer>
         made with critter love 💗
-        <br></br>
-        <br></br>
     </footer>
 </body>
 </html>

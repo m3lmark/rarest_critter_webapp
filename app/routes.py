@@ -9,6 +9,8 @@ def fetch_with_retries(url, params, max_retries=5, backoff_factor=0.3):
     for attempt in range(max_retries):
         try:
             response = requests.get(url, params=params)
+            if response.status_code == 422:
+                return response  # Return the response to handle 422 status code
             response.raise_for_status()
             return response
         except requests.exceptions.RequestException as e:
@@ -32,6 +34,7 @@ def index():
             "fields": "taxon.name,taxon.rank,taxon.observations_count",
             "per_page": 100,
             "page": 1,
+            "quality_grade": "any"  # Include both verified and unverified observations
         }
 
         if filter_by_species_type and species_type:
@@ -40,6 +43,8 @@ def index():
         while True:
             try:
                 response = fetch_with_retries(species_counts_url, params)
+                if response.status_code == 422:
+                    return render_template('index.html', error="Username does not exist. Please enter a valid iNaturalist username.")
                 data = response.json()
                 for result in data["results"]:
                     taxon_id = result["taxon"]["id"]
@@ -78,7 +83,7 @@ def index():
                     return render_template('index.html', error=f"Error fetching taxon name for Taxon ID {taxon_id}: {exc}")
 
         results.sort(key=lambda x: x[2])
-        return render_template('index.html', results=results, number_of_results=number_of_results)
+        return render_template('index.html', results=results, number_of_results=number_of_results, species_type=species_type)
 
     return render_template('index.html')
 
