@@ -10,6 +10,8 @@ bp = Blueprint('main', __name__)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+DEFAULT_PHOTO_URL = "https://png.pngtree.com/png-vector/20221125/ourmid/pngtree-no-image-available-icon-flatvector-illustration-pic-design-profile-vector-png-image_40966566.jpg"
+
 def fetch_with_retries(url, params=None, max_retries=5, backoff_factor=0.3):
     for attempt in range(max_retries):
         try:
@@ -36,18 +38,19 @@ def fetch_taxon_info(taxon_id, max_retries=5, backoff_factor=0.3):
             response.raise_for_status()
             taxon_data = response.json()
             if taxon_data and "results" in taxon_data and len(taxon_data["results"]) > 0:
-                common_name = taxon_data["results"][0].get("preferred_common_name")
-                scientific_name = taxon_data["results"][0].get("name", "Unknown")
-                image_url = taxon_data["results"][0].get("default_photo", {}).get("square_url")
+                taxon_result = taxon_data["results"][0]
+                common_name = taxon_result.get("preferred_common_name")
+                scientific_name = taxon_result.get("name", "Unknown")
+                image_url = taxon_result.get("default_photo", {}).get("square_url", DEFAULT_PHOTO_URL) if taxon_result.get("default_photo") else DEFAULT_PHOTO_URL
                 return (common_name if common_name else scientific_name, image_url)
-            return (None, None)
+            return (None, DEFAULT_PHOTO_URL)
         except requests.exceptions.RequestException as e:
             if attempt < max_retries - 1:
                 time.sleep(backoff_factor * (2 ** attempt))
             else:
                 logger.error(f"Failed to fetch taxon info for Taxon ID {taxon_id} after {max_retries} attempts")
                 raise e
-    return (None, None)
+    return (None, DEFAULT_PHOTO_URL)
 
 @bp.route('/', methods=['GET', 'POST'])
 def index():
