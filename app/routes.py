@@ -47,6 +47,7 @@ def fetch_taxon_info(taxon_id, max_retries=5, backoff_factor=0.3):
             else:
                 logger.error(f"Failed to fetch taxon info for Taxon ID {taxon_id} after {max_retries} attempts")
                 raise e
+    return (None, None)
 
 @bp.route('/', methods=['GET', 'POST'])
 def index():
@@ -106,6 +107,9 @@ def index():
                 taxon_id = future_to_taxon[future]
                 try:
                     taxon_name, image_url = future.result()
+                    if taxon_name is None:
+                        logger.error(f"Failed to fetch taxon name for Taxon ID {taxon_id}")
+                        continue
                     observations_count = taxon_frequency[taxon_id]["count"]
                     taxon_type = taxon_frequency[taxon_id]["type"]
                     observation_url = f"https://www.inaturalist.org/observations?user_id={username}&taxon_id={taxon_id}"
