@@ -16,9 +16,6 @@ def fetch_with_retries(url, params=None, max_retries=5, backoff_factor=0.3):
     for attempt in range(max_retries):
         try:
             response = requests.get(url, params=params)
-            if response.status_code == 429:
-                time.sleep(backoff_factor * (2 ** attempt))
-                continue
             if response.status_code == 422:
                 return response  # Return the response to handle 422 status code
             response.raise_for_status()
@@ -27,17 +24,15 @@ def fetch_with_retries(url, params=None, max_retries=5, backoff_factor=0.3):
             if attempt < max_retries - 1:
                 time.sleep(backoff_factor * (2 ** attempt))
             else:
-                logger.error(f"Failed to fetch data from {url} after {max_retries} attempts: {e}")
+                logger.error(f"Failed to fetch data from {url} after {max_retries} attempts")
                 raise e
 
 def fetch_taxon_info(taxon_id, max_retries=5, backoff_factor=0.3):
     taxon_url = f"https://api.inaturalist.org/v1/taxa/{taxon_id}"
     for attempt in range(max_retries):
         try:
-            logger.info(f"Fetching taxon info for Taxon ID {taxon_id}, attempt {attempt + 1}")
             response = requests.get(taxon_url)
             if response.status_code == 429:
-                logger.warning(f"Rate limited. Retrying after backoff for Taxon ID {taxon_id}")
                 time.sleep(backoff_factor * (2 ** attempt))
                 continue
             response.raise_for_status()
@@ -48,17 +43,13 @@ def fetch_taxon_info(taxon_id, max_retries=5, backoff_factor=0.3):
                 scientific_name = taxon_result.get("name", "Unknown")
                 image_url = taxon_result.get("default_photo", {}).get("square_url", DEFAULT_PHOTO_URL) if taxon_result.get("default_photo") else DEFAULT_PHOTO_URL
                 return (common_name if common_name else scientific_name, image_url)
-            logger.error(f"No results found in taxon data for Taxon ID {taxon_id}")
             return (None, DEFAULT_PHOTO_URL)
         except requests.exceptions.RequestException as e:
-            logger.error(f"RequestException for Taxon ID {taxon_id}: {e}")
-            if response is not None:
-                logger.error(f"Response content: {response.content}")
             if attempt < max_retries - 1:
                 time.sleep(backoff_factor * (2 ** attempt))
             else:
-                logger.error(f"Failed to fetch taxon info for Taxon ID {taxon_id} after {max_retries} attempts: {e}")
-                return (None, DEFAULT_PHOTO_URL)
+                logger.error(f"Failed to fetch taxon info for Taxon ID {taxon_id} after {max_retries} attempts")
+                raise e
     return (None, DEFAULT_PHOTO_URL)
 
 @bp.route('/', methods=['GET', 'POST'])
@@ -121,7 +112,7 @@ def index():
                     taxon_name, image_url = future.result()
                     if taxon_name is None:
                         logger.error(f"Failed to fetch taxon name for Taxon ID {taxon_id}")
-                        continue
+                        taxon_name = f"No taxon name available, taxon_id: {taxon_id}"
                     observations_count = taxon_frequency[taxon_id]["count"]
                     taxon_type = taxon_frequency[taxon_id]["type"]
                     observation_url = f"https://www.inaturalist.org/observations?user_id={username}&taxon_id={taxon_id}"
