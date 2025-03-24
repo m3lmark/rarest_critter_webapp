@@ -10,7 +10,7 @@ bp = Blueprint('main', __name__)
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def fetch_with_retries(url, params, max_retries=5, backoff_factor=0.3):
+def fetch_with_retries(url, params=None, max_retries=5, backoff_factor=0.3):
     for attempt in range(max_retries):
         try:
             response = requests.get(url, params=params)
@@ -35,7 +35,7 @@ def fetch_taxon_info(taxon_id, max_retries=5, backoff_factor=0.3):
                 continue
             response.raise_for_status()
             taxon_data = response.json()
-            if "results" in taxon_data and len(taxon_data["results"]) > 0:
+            if taxon_data and "results" in taxon_data and len(taxon_data["results"]) > 0:
                 common_name = taxon_data["results"][0].get("preferred_common_name")
                 scientific_name = taxon_data["results"][0].get("name", "Unknown")
                 image_url = taxon_data["results"][0].get("default_photo", {}).get("square_url")
