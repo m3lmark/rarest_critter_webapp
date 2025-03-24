@@ -37,14 +37,17 @@ def fetch_taxon_info(taxon_id, max_retries=5, backoff_factor=0.3):
                 continue
             response.raise_for_status()
             taxon_data = response.json()
+            logger.debug(f"Taxon data for Taxon ID {taxon_id}: {taxon_data}")
             if taxon_data and "results" in taxon_data and len(taxon_data["results"]) > 0:
                 taxon_result = taxon_data["results"][0]
                 common_name = taxon_result.get("preferred_common_name")
                 scientific_name = taxon_result.get("name", "Unknown")
                 image_url = taxon_result.get("default_photo", {}).get("square_url", DEFAULT_PHOTO_URL) if taxon_result.get("default_photo") else DEFAULT_PHOTO_URL
                 return (common_name if common_name else scientific_name, image_url)
+            logger.error(f"No results found in taxon data for Taxon ID {taxon_id}: {taxon_data}")
             return (None, DEFAULT_PHOTO_URL)
         except requests.exceptions.RequestException as e:
+            logger.error(f"RequestException while fetching taxon info for Taxon ID {taxon_id} on attempt {attempt + 1}: {e}")
             if attempt < max_retries - 1:
                 time.sleep(backoff_factor * (2 ** attempt))
             else:
@@ -75,7 +78,6 @@ def index():
 
         while True:
             try:
-                logger.info(f"Fetching species counts for page {params['page']}")
                 response = fetch_with_retries(species_counts_url, params)
                 if response.status_code == 422:
                     return render_template('index.html', error="Username does not exist. Please enter a valid iNaturalist username.")
@@ -92,7 +94,7 @@ def index():
                     break
                 params["page"] += 1
             except requests.exceptions.RequestException as e:
-                logger.error(f"Error fetching species counts: {e}")
+                logger.error(f"Error fetching species counts for user {username} on page {params['page']}: {e}")
                 return render_template('index.html', error=f"Error fetching species counts: {e}")
 
         if len(taxon_frequency) < number_of_results:
