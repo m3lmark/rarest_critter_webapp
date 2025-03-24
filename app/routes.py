@@ -52,6 +52,8 @@ def fetch_taxon_info(taxon_id, max_retries=5, backoff_factor=0.3):
             return (None, DEFAULT_PHOTO_URL)
         except requests.exceptions.RequestException as e:
             logger.error(f"RequestException for Taxon ID {taxon_id}: {e}")
+            if response is not None:
+                logger.error(f"Response content: {response.content}")
             if attempt < max_retries - 1:
                 time.sleep(backoff_factor * (2 ** attempt))
             else:
