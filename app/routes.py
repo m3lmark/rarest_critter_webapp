@@ -27,7 +27,7 @@ def fetch_with_retries(url, params=None, max_retries=5, backoff_factor=0.3):
                 logger.error(f"Failed to fetch data from {url} after {max_retries} attempts")
                 raise e
 
-def fetch_taxon_info(taxon_id, max_retries=5, backoff_factor=0.6):
+def fetch_taxon_info(taxon_id, max_retries=5, backoff_factor=0.3):
     taxon_url = f"https://api.inaturalist.org/v1/taxa/{taxon_id}"
     for attempt in range(max_retries):
         try:
@@ -45,12 +45,8 @@ def fetch_taxon_info(taxon_id, max_retries=5, backoff_factor=0.6):
                 image_url = taxon_result.get("default_photo", {}).get("square_url", DEFAULT_PHOTO_URL) if taxon_result.get("default_photo") else DEFAULT_PHOTO_URL
                 logger.info(f"Fetched taxon info for Taxon ID {taxon_id}: common_name={common_name}, scientific_name={scientific_name}, image_url={image_url}")
                 return (common_name if common_name else scientific_name, image_url)
-            else:
-                logger.error(f"No results found in taxon data for Taxon ID {taxon_id}: {taxon_data}")
-                if attempt < max_retries - 1:
-                    time.sleep(backoff_factor * (2 ** attempt))
-                else:
-                    return (None, DEFAULT_PHOTO_URL)
+            logger.error(f"No results found in taxon data for Taxon ID {taxon_id}: {taxon_data}")
+            return (None, DEFAULT_PHOTO_URL)
         except requests.exceptions.RequestException as e:
             logger.error(f"RequestException while fetching taxon info for Taxon ID {taxon_id} on attempt {attempt + 1}: {e}")
             if attempt < max_retries - 1:
@@ -121,7 +117,7 @@ def index():
                     taxon_name, image_url = future.result()
                     if taxon_name is None:
                         logger.error(f"Failed to fetch taxon name for Taxon ID {taxon_id}")
-                        continue
+                        taxon_name = f"Unknown (ID: {taxon_id})"
                     observations_count = taxon_frequency[taxon_id]["count"]
                     taxon_type = taxon_frequency[taxon_id]["type"]
                     observation_url = f"https://www.inaturalist.org/observations?user_id={username}&taxon_id={taxon_id}"
