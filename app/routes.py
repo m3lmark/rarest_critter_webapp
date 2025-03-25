@@ -37,7 +37,7 @@ def fetch_taxon_info(taxon_id, max_retries=5, backoff_factor=0.3):
                 continue
             response.raise_for_status()
             taxon_data = response.json()
-            logger.info(f"Checking condition: taxon_data={bool(taxon_data)}, 'results' in taxon_data={'results' in taxon_data}, len(taxon_data['results'])={len(taxon_data['results']) if 'results' in taxon_data else 'N/A'}")
+            logger.info(f"Checking condition: taxon_data={bool(taxon_data)}\n'results' in taxon_data={'results' in taxon_data}\nlen(taxon_data['results'])={len(taxon_data['results']) if 'results' in taxon_data else 'N/A'}")
             if taxon_data and "results" in taxon_data and len(taxon_data["results"]) > 0:
                 taxon_result = taxon_data["results"][0]
                 common_name = taxon_result.get("preferred_common_name")
