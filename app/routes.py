@@ -43,6 +43,7 @@ def fetch_taxon_info(taxon_id, max_retries=5, backoff_factor=0.3):
                 common_name = taxon_result.get("preferred_common_name")
                 scientific_name = taxon_result.get("name", "Unknown")
                 image_url = taxon_result.get("default_photo", {}).get("square_url", DEFAULT_PHOTO_URL) if taxon_result.get("default_photo") else DEFAULT_PHOTO_URL
+                logger.info(f"Fetched taxon info for Taxon ID {taxon_id}: common_name={common_name}, scientific_name={scientific_name}, image_url={image_url}")
                 return (common_name if common_name else scientific_name, image_url)
             logger.error(f"No results found in taxon data for Taxon ID {taxon_id}: {taxon_data}")
             return (None, DEFAULT_PHOTO_URL)
