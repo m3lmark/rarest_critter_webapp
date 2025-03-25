@@ -77,6 +77,7 @@ def index():
         if filter_by_species_type and species_type:
             params["iconic_taxa"] = species_type
 
+        total_observations = 0
         while True:
             try:
                 response = fetch_with_retries(species_counts_url, params)
@@ -91,6 +92,7 @@ def index():
                         "count": observations_count,
                         "type": taxon_type
                     }
+                    total_observations += observations_count
                 if data["total_results"] <= params["page"] * params["per_page"]:
                     break
                 params["page"] += 1
@@ -99,7 +101,7 @@ def index():
                 return render_template('index.html', error=f"Error fetching species counts: {e}")
 
         if len(taxon_frequency) < number_of_results:
-            return render_template('index.html', error="Not enough observations for the limit provided.")
+            return render_template('index.html', error=f"{username} only has {len(taxon_frequency)} observations which is not sufficient for the number requested.")
 
         sorted_taxa = sorted(taxon_frequency.items(), key=lambda item: item[1]["count"])[:number_of_results]
 
