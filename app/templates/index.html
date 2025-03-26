@@ -163,6 +163,17 @@
                 <option value="unknown">❓ unknown</option>
             </select><br><br>
         </div>
+        <div class="checkbox-container">
+            <label for="filter_by_research_grade">Filter by Quality Grade:</label>
+            <input type="checkbox" id="filter_by_research_grade" name="filter_by_research_grade">
+        </div>
+        <div id="research_grade_options" style="display: none;">
+            <label for="research_grade">Research Grade:</label>
+            <select id="research_grade" name="research_grade">
+                <option value="casual">⛱️ Casual</option>
+                <option value="research">🔬 Research Grade</option>
+            </select>
+        </div><br><br>
         <label for="number_of_results">Number of Results (max 50):</label>
         <input type="number" id="number_of_results" name="number_of_results" min="1" max="50" value="5"><br><br>
         <button type="submit">🔍 Search</button>
@@ -171,7 +182,7 @@
     {% if results %}
         <h2>{{ number_of_results }} least observed {% if species_type %}{{ species_type }}{% else %}critters{% endif %}</h2>
         <ul>
-            {% for taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url in results %}
+            {% for taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url, quality_grade in results %}
                 <li>
                     {% if image_url %}
                         <img src="{{ image_url }}" alt="{{ taxon_name }}" class="observation-image">
@@ -183,6 +194,9 @@
                         </div>
                         <div class="taxon-info">
                             Observations: {{ observations_count | int | format_number }}
+                        </div>
+                        <div class="taxon-info">
+                            Quality Grade: {{ quality_grade | title }}
                         </div>
                     </div>
                 </li>
@@ -198,5 +212,10 @@
     <footer>
         made with critter love 💗
     </footer>
+    <script>
+        document.getElementById('filter_by_research_grade').addEventListener('change', function() {
+            document.getElementById('research_grade_options').style.display = this.checked ? 'block' : 'none';
+        });
+    </script>
 </body>
 </html>

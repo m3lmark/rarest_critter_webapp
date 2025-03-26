@@ -63,6 +63,8 @@ def index():
         filter_by_species_type = 'filter_by_species_type' in request.form
         species_type = request.form.get('species_type') if filter_by_species_type else None
         number_of_results = int(request.form.get('number_of_results', 5))
+        filter_by_research_grade = 'filter_by_research_grade' in request.form
+        research_grade = request.form.get('research_grade') if filter_by_research_grade else None
 
         taxon_frequency = {}
         species_counts_url = "https://api.inaturalist.org/v1/observations/species_counts"
@@ -71,11 +73,14 @@ def index():
             "fields": "taxon.name,taxon.rank,taxon.observations_count",
             "per_page": 100,
             "page": 1,
-            "quality_grade": "any"  # Include both verified and unverified observations
+            "quality_grade": "any"  # Include both verified and unverified observations by default
         }
 
         if filter_by_species_type and species_type:
             params["iconic_taxa"] = species_type
+
+        if filter_by_research_grade and research_grade:
+            params["quality_grade"] = research_grade
 
         total_observations = 0
         while True:
@@ -90,7 +95,8 @@ def index():
                     taxon_type = result["taxon"].get("iconic_taxon_name", "unknown")
                     taxon_frequency[taxon_id] = {
                         "count": observations_count,
-                        "type": taxon_type
+                        "type": taxon_type,
+                        "quality_grade": research_grade if filter_by_research_grade else "any"
                     }
                     total_observations += observations_count
                 if data["total_results"] <= params["page"] * params["per_page"]:
@@ -122,8 +128,9 @@ def index():
                         continue
                     observations_count = taxon_frequency[taxon_id]["count"]
                     taxon_type = taxon_frequency[taxon_id]["type"]
+                    quality_grade = taxon_frequency[taxon_id]["quality_grade"]
                     observation_url = f"https://www.inaturalist.org/observations?user_id={username}&taxon_id={taxon_id}"
-                    results.append((taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url))
+                    results.append((taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url, quality_grade))
                 except Exception as exc:
                     logger.error(f"Error fetching taxon name for Taxon ID {taxon_id}: {exc}")
                     return render_template('index.html', error=f"Error fetching taxon name for Taxon ID {taxon_id}: {exc}")
@@ -137,8 +144,9 @@ def index():
                     taxon_name = f"Unknown (ID: {taxon_id})"
                 observations_count = taxon_frequency[taxon_id]["count"]
                 taxon_type = taxon_frequency[taxon_id]["type"]
+                quality_grade = taxon_frequency[taxon_id]["quality_grade"]
                 observation_url = f"https://www.inaturalist.org/observations?user_id={username}&taxon_id={taxon_id}"
-                results.append((taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url))
+                results.append((taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url, quality_grade))
             except Exception as exc:
                 logger.error(f"Error fetching taxon name for Taxon ID {taxon_id} after sequential retry: {exc}")
                 return render_template('index.html', error=f"Error fetching taxon name for Taxon ID {taxon_id} after sequential retry: {exc}")
