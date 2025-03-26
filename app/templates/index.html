@@ -180,7 +180,6 @@
     </form>
     {% endif %}
     {% if results %}
-    {% for taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url, quality_grade in results %}
     <h2>
         {% if username[-1] == 's' %}
             {{ username }}'
@@ -193,6 +192,7 @@
         least observed {% if quality_grade %}{{ quality_grade }}{% endif %} {% if species_type %}{{ species_type }}{% else %}critters{% endif %}
     </h2>
     <ul>
+        {% for taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url, quality_grade in results %}
             <li>
                 {% if image_url %}
                     <img src="{{ image_url }}" alt="{{ taxon_name }}" class="observation-image">
@@ -215,7 +215,7 @@
     <form action="/" method="get">
         <button type="submit" class="back-button">Back</button>
     </form>
-{% endif %}
+    {% endif %}
 {% if error %}
     <p class="error">{{ error }}</p>
 {% endif %}
