@@ -106,6 +106,7 @@ def index():
         sorted_taxa = sorted(taxon_frequency.items(), key=lambda item: item[1]["count"])[:number_of_results]
 
         results = []
+        failed_taxon_ids = []
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future_to_taxon = {
                 executor.submit(fetch_taxon_info, taxon_id): taxon_id
@@ -117,7 +118,8 @@ def index():
                     taxon_name, image_url = future.result()
                     if taxon_name is None:
                         logger.error(f"Failed to fetch taxon name for Taxon ID {taxon_id}")
-                        taxon_name = f"Unknown (ID: {taxon_id})"
+                        failed_taxon_ids.append(taxon_id)
+                        continue
                     observations_count = taxon_frequency[taxon_id]["count"]
                     taxon_type = taxon_frequency[taxon_id]["type"]
                     observation_url = f"https://www.inaturalist.org/observations?user_id={username}&taxon_id={taxon_id}"
@@ -125,6 +127,21 @@ def index():
                 except Exception as exc:
                     logger.error(f"Error fetching taxon name for Taxon ID {taxon_id}: {exc}")
                     return render_template('index.html', error=f"Error fetching taxon name for Taxon ID {taxon_id}: {exc}")
+
+        # Sequentially fetch taxon names for failed taxon IDs
+        for taxon_id in failed_taxon_ids:
+            try:
+                taxon_name, image_url = fetch_taxon_info(taxon_id)
+                if taxon_name is None:
+                    logger.error(f"Failed to fetch taxon name for Taxon ID {taxon_id} after sequential retry")
+                    taxon_name = f"Unknown (ID: {taxon_id})"
+                observations_count = taxon_frequency[taxon_id]["count"]
+                taxon_type = taxon_frequency[taxon_id]["type"]
+                observation_url = f"https://www.inaturalist.org/observations?user_id={username}&taxon_id={taxon_id}"
+                results.append((taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url))
+            except Exception as exc:
+                logger.error(f"Error fetching taxon name for Taxon ID {taxon_id} after sequential retry: {exc}")
+                return render_template('index.html', error=f"Error fetching taxon name for Taxon ID {taxon_id} after sequential retry: {exc}")
 
         results.sort(key=lambda x: x[2])
         return render_template('index.html', results=results, number_of_results=number_of_results, species_type=species_type)
