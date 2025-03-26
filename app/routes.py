@@ -179,7 +179,7 @@ def index():
                 return render_template('index.html', error=f"Error fetching taxon name for Taxon ID {taxon_id} after sequential retry: {exc}")
 
         results.sort(key=lambda x: x[2])
-        return render_template('index.html', results=results, number_of_results=number_of_results, species_type=species_type, username=username)
+        return render_template('index.html', results=results, number_of_results=number_of_results, species_type=species_type, username=username, research_grade=research_grade)
 
     return render_template('index.html')
 

@@ -189,7 +189,15 @@
         {% if number_of_results != 1 %}
             {{ number_of_results }}
         {% endif %}
-        least observed {% if quality_grade %}{{ quality_grade }}{% endif %} {% if species_type %}{{ species_type }}{% else %}critters{% endif %}
+        least observed 
+        {% if research_grade %}
+            {{ research_grade }} grade 
+        {% endif %}
+        {% if species_type %}
+            {{ species_type }}
+        {% else %}
+            critters
+        {% endif %}
     </h2>
     <ul>
         {% for taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url, quality_grade in results %}
