@@ -87,7 +87,7 @@ def index():
             try:
                 response = fetch_with_retries(species_counts_url, params)
                 if response.status_code == 422:
-                    return render_template('index.html', error="Username does not exist. Please enter a valid iNaturalist username.")
+                    return render_template('index.html', error=f"The username '{username}' does not exist. Please enter a valid iNaturalist username.")
                 data = response.json()
                 for result in data["results"]:
                     taxon_id = result["taxon"]["id"]
@@ -107,7 +107,34 @@ def index():
                 return render_template('index.html', error=f"Error fetching species counts: {e}")
 
         if len(taxon_frequency) < number_of_results:
-            return render_template('index.html', error=f"{username} only has {len(taxon_frequency)} observations which is not sufficient for the number requested.")
+            error_message = ""
+            if research_grade:
+                if len(taxon_frequency) == 0:
+                    error_message = f"{username} does not have any {research_grade} observations."
+                if species_type:
+                    if len(taxon_frequency) == 1:
+                        error_message = f"{username} only has {len(taxon_frequency)} {research_grade} {species_type} observation which is not sufficient for the number requested."
+                    else:
+                        error_message = f"{username} only has {len(taxon_frequency)} {research_grade} {species_type} observations which is not sufficient for the number requested."
+                else:
+                    if len(taxon_frequency) == 1:
+                        error_message = f"{username} only has {len(taxon_frequency)} {research_grade} observation which is not sufficient for the number requested."
+                    else:
+                        error_message = f"{username} only has {len(taxon_frequency)} {research_grade} observations which is not sufficient for the number requested."
+            else:
+                if len(taxon_frequency) == 0:
+                    error_message = f"{username} does not have any observations."
+                if species_type:
+                    if len(taxon_frequency) == 1:
+                        error_message = f"{username} only has {len(taxon_frequency)} {species_type} observation which is not sufficient for the number requested."
+                    else:
+                        error_message = f"{username} only has {len(taxon_frequency)} {species_type} observations which is not sufficient for the number requested."
+                else:
+                    if len(taxon_frequency) == 1:
+                        error_message = f"{username} only has {len(taxon_frequency)} observation which is not sufficient for the number requested."
+                    else:
+                        error_message = f"{username} only has {len(taxon_frequency)} observations which is not sufficient for the number requested."
+            return render_template('index.html', error=error_message)
 
         sorted_taxa = sorted(taxon_frequency.items(), key=lambda item: item[1]["count"])[:number_of_results]
 
@@ -152,7 +179,7 @@ def index():
                 return render_template('index.html', error=f"Error fetching taxon name for Taxon ID {taxon_id} after sequential retry: {exc}")
 
         results.sort(key=lambda x: x[2])
-        return render_template('index.html', results=results, number_of_results=number_of_results, species_type=species_type)
+        return render_template('index.html', results=results, number_of_results=number_of_results, species_type=species_type, username=username)
 
     return render_template('index.html')
 

@@ -180,42 +180,52 @@
     </form>
     {% endif %}
     {% if results %}
-        <h2>{{ number_of_results }} least observed {% if species_type %}{{ species_type }}{% else %}critters{% endif %}</h2>
-        <ul>
-            {% for taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url, quality_grade in results %}
-                <li>
-                    {% if image_url %}
-                        <img src="{{ image_url }}" alt="{{ taxon_name }}" class="observation-image">
-                    {% endif %}
-                    <div class="taxon-details">
-                        <a href="{{ observation_url }}" target="_blank"><strong>{{ taxon_name }}</strong></a>
-                        <div class="taxon-info">
-                            Taxon ID: <a href="https://www.inaturalist.org/taxa/{{ taxon_id }}" target="_blank">{{ taxon_id }}</a>
-                        </div>
-                        <div class="taxon-info">
-                            Observations: {{ observations_count | int | format_number }}
-                        </div>
-                        <div class="taxon-info">
-                            Quality Grade: {{ quality_grade | title }}
-                        </div>
+    {% for taxon_name, taxon_id, observations_count, taxon_type, observation_url, image_url, quality_grade in results %}
+    <h2>
+        {% if username[-1] == 's' %}
+            {{ username }}'
+        {% else %}
+            {{ username }}'s
+        {% endif %}
+        {% if number_of_results != 1 %}
+            {{ number_of_results }}
+        {% endif %}
+        least observed {% if quality_grade %}{{ quality_grade }}{% endif %} {% if species_type %}{{ species_type }}{% else %}critters{% endif %}
+    </h2>
+    <ul>
+            <li>
+                {% if image_url %}
+                    <img src="{{ image_url }}" alt="{{ taxon_name }}" class="observation-image">
+                {% endif %}
+                <div class="taxon-details">
+                    <a href="{{ observation_url }}" target="_blank"><strong>{{ taxon_name }}</strong></a>
+                    <div class="taxon-info">
+                        Taxon ID: <a href="https://www.inaturalist.org/taxa/{{ taxon_id }}" target="_blank">{{ taxon_id }}</a>
                     </div>
-                </li>
-            {% endfor %}
-        </ul>
-        <form action="/" method="get">
-            <button type="submit" class="back-button">Back</button>
-        </form>
-    {% endif %}
-    {% if error %}
-        <p class="error">{{ error }}</p>
-    {% endif %}
-    <footer>
-        made with critter love 💗
-    </footer>
-    <script>
-        document.getElementById('filter_by_research_grade').addEventListener('change', function() {
-            document.getElementById('research_grade_options').style.display = this.checked ? 'block' : 'none';
-        });
-    </script>
+                    <div class="taxon-info">
+                        Observations: {{ observations_count | int | format_number }}
+                    </div>
+                    <div class="taxon-info">
+                        Quality Grade: {{ quality_grade | title }}
+                    </div>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+    <form action="/" method="get">
+        <button type="submit" class="back-button">Back</button>
+    </form>
+{% endif %}
+{% if error %}
+    <p class="error">{{ error }}</p>
+{% endif %}
+<footer>
+    made with critter love 💗
+</footer>
+<script>
+    document.getElementById('filter_by_research_grade').addEventListener('change', function() {
+        document.getElementById('research_grade_options').style.display = this.checked ? 'block' : 'none';
+    });
+</script>
 </body>
 </html>
