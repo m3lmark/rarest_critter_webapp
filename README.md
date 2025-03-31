@@ -2,8 +2,10 @@
 
 This project is a web application that allows users to search for the rarest critters based on species observations using the iNaturalist API. The application is built using Flask and provides a user-friendly interface to display the results.
 
-![alt text](https://github.com/m3lmark/rarest_critter_webapp/blob/main/web_app_screenshots/input.png?raw=true)
-![alt text](https://github.com/m3lmark/rarest_critter_webapp/blob/main/web_app_screenshots/output.png?raw=true)
+Input             |  Output
+:-------------------------:|:-------------------------:
+![](https://github.com/m3lmark/rarest_critter_webapp/blob/main/web_app_screenshots/input.png?raw=true)  |  ![](https://github.com/m3lmark/rarest_critter_webapp/blob/main/web_app_screenshots/output.png?raw=true)
+
 
 ### TODO:
  - [x] Make mobile friendly
