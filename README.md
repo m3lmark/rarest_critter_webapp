@@ -4,7 +4,7 @@ This project is a web application that allows users to search for the rarest cri
 
 Input             |  Output
 :-------------------------:|:-------------------------:
-![](https://github.com/m3lmark/rarest_critter_webapp/blob/main/web_app_screenshots/input.jpeg?raw=true)  |  ![](https://github.com/m3lmark/rarest_critter_webapp/blob/main/web_app_screenshots/output.png?raw=true)
+![](https://github.com/m3lmark/rarest_critter_webapp/blob/main/web_app_screenshots/input.jpg?raw=true)  |  ![](https://github.com/m3lmark/rarest_critter_webapp/blob/main/web_app_screenshots/output.png?raw=true)
 
 
 ### TODO:
